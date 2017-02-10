@@ -1,9 +1,7 @@
 # install and launch required packages
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("shiny", "xlsx", "xtable")
-if (!require("crosstalk")) devtools::install_github('rstudio/crosstalk')
-if (!require("DT")) devtools::install_github('rstudio/DT')
+pacman::p_load("shiny", "xlsx", "xtable", "crosstalk", "DT")
 
 library(shiny)
 library(xlsx)
@@ -33,7 +31,7 @@ library(DT)
     
     selectedData <- reactive({
 
-      # average of selected columns
+      # average log of selected columns
       data_sets <- myData()
       if(is.null(input$columns)) return()
       data_sets <- na.omit(data_sets[,c("TIME",input$columns), drop=FALSE])
@@ -93,7 +91,40 @@ library(DT)
       dff[order(dff$slope, decreasing=TRUE),]
       })
 
-    # display table
+    # O.D. range choice
+
+    ODInterval <- reactive({
+      selectedData <- selectedData()
+      if (is.null(selectedData)) return(NULL)
+      selectedData[selectedData$y<=input$od1 & selectedData$y>=input$od2,]
+    })
+
+    # display first plot
+
+    output$w2 <- renderPlot({
+
+      selectedData <- selectedData()
+      if (is.null(selectedData)) return(NULL)
+      ODInterval <- ODInterval()
+      if (is.null(ODInterval)) return(NULL)
+      
+      print(max(ODInterval$x)-min(ODInterval$x)+1)
+
+      par(mar = c(4, 4, 1, .1))
+      plot(selectedData$x,selectedData$y,type='l', col='grey80', ylab="ln O.D.", xlab="time", lwd = 3)
+      points(ODInterval$x, ODInterval$y, type='l', col='blue', lwd = 4)
+      abline(h=input$od1,lty='dashed',col='grey')
+      abline(h=input$od2,lty='dashed',col='grey')
+      fitmodel <- lm(ODInterval$y~ODInterval$x)
+      abline(fitmodel,lwd=1,lty='dashed', col=1)
+      legend("topleft",paste(
+        paste("Intercept = ",signif(fitmodel$coefficients[1],3),"\n"),
+        paste("Slope = ",signif(fitmodel$coefficients[2],3),"\n"),
+        paste("Doubling time = ",signif(log(2)/fitmodel$coefficients[2],3),"\n"),
+        sep="\n"), bty="n")
+      })
+
+    # display first table
 
     output$x1 <- DT::renderDataTable(linearRegions(), 
       server = FALSE, 
@@ -106,7 +137,7 @@ library(DT)
       input$x1_rows_selected
       })
 
-    # display first plot
+    # display second plot
 
     output$x2 <- renderPlot({
 
@@ -136,7 +167,7 @@ library(DT)
         polygon( c(x2,x2,x1,x1), c(miny,maxy,maxy,miny),col=rgb(0.25,0.40,0.88,0.2), border='grey')
       })
 
-    # display second plot
+    # display third plot
 
     output$x3 <- renderPlot({
 
@@ -152,7 +183,7 @@ library(DT)
       new.x <- subset(x, x>=range[1] & x<=range[2])
       new.y <- y[which(x%in%new.x)]
       fitmodel <- lm(new.y~new.x)
-      abl <- abline(fitmodel,lwd=1,lty='dashed')
+      abline(fitmodel,lwd=1,lty='dashed')
       legend("topleft",paste(
         paste("Intercept = ",signif(fitmodel$coefficients[1],3),"\n"),
         paste("Slope = ",signif(fitmodel$coefficients[2],3),"\n"),
@@ -181,7 +212,7 @@ library(DT)
       filename = function() { paste('mydata.csv', sep='') },
       content = function(file) {
         ic <- paste(input$columns,collapse=";")
-        df <- linearRegions()[selectedInterval(), , drop = FALSE][-1]
+        df <- linearRegions()[selectedInterval(), , drop = FALSE]
         df <- cbind("Data"=ic,df,"CloseToZero"=input$zero,"SmoothWind"=input$wind,"SpanCutoff"=input$span)
         write.csv(df, file, row.names=FALSE)
     })
