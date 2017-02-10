@@ -1,8 +1,8 @@
 # psychic-waffle
-Find linear regions of a growth curve
+Find linear regions of a growth curve with R Shiny
 
-Required R packages:
-shiny
-xlsx
+<small>
+All the required packages (shiny, xlsx, xtable, DT, crosstalk, pacman) are installed automatically if not present.
 
-TO DO: download selected data
+file input: see examples/
+</small>
