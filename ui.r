@@ -11,6 +11,11 @@ shinyUI(pageWithSidebar(
   ),
 
   mainPanel(
+    fluidRow(
+        numericInput("od1", "ln O.D. interval:", -0.8, step=0.1),
+        numericInput("od2", "", -1.5, step=0.1),
+        plotOutput("w2")
+    ),
     sliderInput("zero",
                   "Closeness to zero",
                   min = 0,
@@ -26,10 +31,10 @@ shinyUI(pageWithSidebar(
                   min = 0,
                   max = 10,
                   value = 0),
-      fluidRow(
+    fluidRow(
         column(6, plotOutput("x2")),
         column(6, DT::dataTableOutput('x1'))
-      ),
+    ),
     sliderInput("range",
                   "Time range",
                   value = c(0,10),
