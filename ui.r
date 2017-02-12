@@ -4,6 +4,10 @@ shinyUI(pageWithSidebar(
 
   sidebarPanel(
     fileInput("file1", "File input"),
+    textOutput("text1"),
+    textOutput("text2"),
+    br(),
+    actionButton("Uncheck", label="Uncheck"),
     downloadButton('downloadData', 'Download'),
     uiOutput("choose_columns"),
     br(),
