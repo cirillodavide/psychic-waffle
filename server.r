@@ -19,13 +19,31 @@ library(DT)
       data
       })
 
-    # check boxes
+    # check/uncheck boxes
+
     output$choose_columns <- renderUI({
       data_sets <- myData()
       if(is.null(data_sets)) return()
       colnames <- colnames(data_sets)[-1]
-      checkboxGroupInput("columns", "Choose columns", choices  = colnames)
+      checkboxGroupInput("columns", "Choose columns", choices  = colnames, selected=NULL)
       })
+    
+    observe({
+    data_sets <- myData()
+    if(is.null(data_sets)) return()
+    colnames <- colnames(data_sets)[-1]
+    if (input$Uncheck > 0) {
+      updateCheckboxGroupInput(session=session, inputId="columns", choices  = colnames, selected=NULL)
+      }
+    })
+
+    # display selected columns
+
+    output$text1 <- renderText({
+      if(is.null(input$columns)) return()
+      "You selected columns " 
+      })
+    output$text2 <- renderText({ input$columns })
 
     # data table
     
@@ -107,8 +125,6 @@ library(DT)
       if (is.null(selectedData)) return(NULL)
       ODInterval <- ODInterval()
       if (is.null(ODInterval)) return(NULL)
-      
-      print(max(ODInterval$x)-min(ODInterval$x)+1)
 
       par(mar = c(4, 4, 1, .1))
       plot(selectedData$x,selectedData$y,type='l', col='grey80', ylab="ln O.D.", xlab="time", lwd = 3)
